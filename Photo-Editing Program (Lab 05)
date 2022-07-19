@@ -1,0 +1,202 @@
+PImage imgOrig, imgMod;
+int counter = 0;
+
+
+static final String[] IMG_EXTS = {
+  ".gif", ".png", ".jpg"
+};
+String filter="";
+
+
+void setup() {
+  size(600, 600);
+
+  for (String s : IMG_EXTS) {
+    filter+=("*"+s+";");
+  }
+}
+
+
+void draw() {
+  background(192);
+  if (imgMod != null) {
+    imageMode(CENTER);
+    image(imgMod, width/2, height/2);
+  }
+}
+
+
+
+void scaleTheImage() {
+//implement this...
+//imgMod.resize(width, height);
+
+  if (imgMod.width > imgMod.height){
+    //scale by width
+    imgMod.resize(width, 0);
+  } else if (imgMod.width < imgMod.height){
+    //scale by height
+    imgMod.resize(0, height);
+  } else {
+    //scale by width and height
+    imgMod.resize(width, height);
+  }
+}
+
+
+void redscaleIt() {
+  PImage tempimg = createImage(imgMod.width, imgMod.height, imgMod.format);
+  for (int x=0; x<imgMod.width; x++) {
+    for (int y=0; y<imgMod.height; y++) {
+      color colorAtXY = imgMod.get(x, y);
+      color colorToXY = color(red(colorAtXY), 0, 0);
+      tempimg.set(x, y, colorToXY);
+    }
+  }
+  imgMod = tempimg;
+}
+
+
+
+void greenscaleIt() {
+//implement this...
+  PImage tempimg = createImage(imgMod.width, imgMod.height, imgMod.format);
+  for (int x=0; x<imgMod.width; x++) {
+    for (int y=0; y<imgMod.height; y++) {
+      color colorAtXY = imgMod.get(x, y);
+      color colorToXY = color(0, green(colorAtXY), 0);
+      tempimg.set(x, y, colorToXY);
+    }
+  }
+  imgMod = tempimg;
+}
+
+
+
+
+/*Task 3) Implement the function grayscaleIt() so that each pixel is replaced by a grayscale version of itself.  
+The algorithm that you need to use is to take the average of the three color channels of a pixel 
+(which would be (the red + the green + the blue)/3).
+*/
+
+void grayscaleIt() {
+//implement this...
+  PImage tempimg = createImage(imgMod.width, imgMod.height, imgMod.format);
+  for (int x=0; x<imgMod.width; x++) {
+    for (int y=0; y<imgMod.height; y++) {
+      color colorAtXY = imgMod.get(x, y);
+      //color colorToXY = color(red(colorAtXY)/3, green(colorAtXY)/3, blue(colorAtXY)/3); 
+      color colorToXY = color((red(colorAtXY) + green(colorAtXY) + blue(colorAtXY))/3);
+      tempimg.set(x, y, colorToXY);
+    }
+  }
+  imgMod = tempimg;
+}
+
+
+
+
+void flipItH() {
+//implement this...
+  PImage tempimg = createImage(imgMod.width, imgMod.height, imgMod.format);
+  for (int x=0; x<imgMod.width; x++) {
+    for (int y=0; y<imgMod.height; y++) {
+      color colorAtXY = imgMod.get(x, y);
+      //int newX = x;
+      int newX = (imgMod.width-1) - x;
+      //int newY = y;
+      int newY = (imgMod.height-1) - y;
+      tempimg.set(newX, newY, colorAtXY); //ISSUE HERE??
+    }
+  }
+  imgMod = tempimg;
+}
+
+
+
+void borderIt() { //hit '4'
+//implement this...
+  PImage tempimg = createImage(imgMod.width, imgMod.height, imgMod.format);
+  for (int x=0; x<imgMod.width; x++) {
+    for (int y=0; y<imgMod.height; y++) {
+      if ((y < 5 || y > (imgMod.height-5)) || (x < 5 || x > (imgMod.width-5))) { //makes the first 5 and last 5 row of pixels black
+        color colorToXY = color(0, 0, 0);
+        tempimg.set(x, y, colorToXY);
+      } else { //makes all other pixels their normal color
+        color colorToXY = imgMod.get(x, y); //ISSUUE HERE??
+        tempimg.set(x, y, colorToXY);
+      } 
+    } //inside inner for loop
+  } //insde outer for loop
+  imgMod = tempimg;
+
+}
+
+
+void keyPressed(KeyEvent e) {
+  
+  
+  if (e.getKey() == 'l') { //load image
+    selectInput("Select an image file to modify:", "processSelectedFile", new File(filter.substring(0, filter.length()-1)));
+  }
+  
+  
+  if (imgMod == null) return;
+  
+
+  if (e.getKey() == '0') { //make it "redscale"
+    redscaleIt();
+  }
+
+  if (e.getKey() == '1') { //make it "greenscale"
+    greenscaleIt();
+  }
+
+  if (e.getKey() == '2') { //make it greyscale
+    grayscaleIt();
+  }
+
+  if (e.getKey() == '3') { //flip it left/right
+    flipItH();
+  }
+
+  if (e.getKey() == '4') { //draw black border
+    borderIt();
+  }
+
+
+
+
+  if (e.getKey() == 'r') {
+    imgMod = imgOrig.copy();
+    scaleTheImage();
+  }
+
+
+
+  if (e.getKey() == 's') {
+    imgMod.save("lab05-"+counter+".png");
+    counter++;
+  }
+}
+
+
+void processSelectedFile(File selection) {
+  if (selection == null) {
+    println("Window was closed or the user hit cancel.");
+  } else {
+    boolean valid = false;
+    String theFile = selection.getAbsolutePath();
+    String theSuffix = theFile.substring(theFile.length()-4);
+    for (int i=0; i<IMG_EXTS.length; i++) {
+      if (theSuffix.equals(IMG_EXTS[i])) {
+        valid = true;
+      }
+    }
+    if (valid) {
+      imgOrig = loadImage(theFile);
+      imgMod = imgOrig.copy();
+      scaleTheImage();
+    }
+  }
+}
